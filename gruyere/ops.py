@@ -58,7 +58,7 @@ def get_convolved_idx(data, idxs0, brush):
     # Find the idx from the POV of the brush
     idx_brush_window = list(product(brush_x_range, brush_y_range))
     # Only keep the idx where the brush is True
-    mask_brush = (brush[*list(zip(*idx_brush_window))] == True)
+    mask_brush = (brush[tuple(zip(*idx_brush_window))] == True)
     # Find the idx from the POV of the data
     idx_data_window = list(product(list(x_range), list(y_range)))
     # Use compress to filter the list of idx from the data POV

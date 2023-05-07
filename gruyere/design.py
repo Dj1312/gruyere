@@ -1,7 +1,7 @@
 from typing import NamedTuple
 
-import jax.numpy as jnp
-# import numpy as jnp
+# import jax.numpy as np
+import numpy as np
 
 from gruyere.states import DesignState, PixelState, TouchState
 from gruyere.viz import visualize
@@ -10,18 +10,18 @@ from gruyere.viz import visualize
 # Jax-JIT accept pytree (list / tuple / dict)
 class Design(NamedTuple):
     # Reward
-    reward: jnp.ndarray
+    reward: np.ndarray
 
     # Design
-    x: jnp.ndarray
+    x: np.ndarray
 
     # Void and Solid pixels
-    p_v: jnp.ndarray
-    p_s: jnp.ndarray
+    p_v: np.ndarray
+    p_s: np.ndarray
 
     # Void and Solid touches
-    t_v: jnp.ndarray
-    t_s: jnp.ndarray
+    t_v: np.ndarray
+    t_s: np.ndarray
 
     def _invert(self):
         # Invert the design
@@ -42,7 +42,7 @@ class Design(NamedTuple):
         return visualize(self)
 
 
-def _initialize_design(reward: jnp.ndarray) -> Design:
+def _initialize_design(reward: np.ndarray) -> Design:
     shape = reward.shape
 
     # Design initialization
@@ -50,16 +50,16 @@ def _initialize_design(reward: jnp.ndarray) -> Design:
     reward = reward
 
     ## Design
-    x = jnp.ones(shape) * DesignState.UNASSIGNED
+    x = np.ones(shape) * DesignState.UNASSIGNED
 
     ## Void and Solid pixels
-    p_v = jnp.ones(shape) * PixelState.POSSIBLE
-    p_s = jnp.ones(shape) * PixelState.POSSIBLE
-    # p_v = jnp.ones(shape) * PixelState.IMPOSSIBLE
-    # p_s = jnp.ones(shape) * PixelState.IMPOSSIBLE
+    p_v = np.ones(shape) * PixelState.POSSIBLE
+    p_s = np.ones(shape) * PixelState.POSSIBLE
+    # p_v = np.ones(shape) * PixelState.IMPOSSIBLE
+    # p_s = np.ones(shape) * PixelState.IMPOSSIBLE
 
     ## Void and Solid touches
-    t_v = jnp.ones(shape) * TouchState.VALID
-    t_s = jnp.ones(shape) * TouchState.VALID
+    t_v = np.ones(shape) * TouchState.VALID
+    t_s = np.ones(shape) * TouchState.VALID
 
     return Design(reward, x, p_v, p_s, t_v, t_s)

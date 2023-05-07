@@ -1,7 +1,5 @@
-import numpy as onp
+import numpy as np
 import jax
-import jax.numpy as jnp
-import jax.scipy as jsp
 
 from scipy.signal import convolve2d
 # import scipy
@@ -16,7 +14,7 @@ from .touches import add_solid_touches, add_void_touches
 
 
 # Generator received the reward post transform with a brush
-@partial(jax.custom_jvp, nondiff_argnums=(1,))
+# @partial(jax.custom_jvp, nondiff_argnums=(1,))
 def generator(reward, brush):
     # total_reward = convolve2d(reward, brush, mode='same')
 
@@ -27,10 +25,10 @@ def generator(reward, brush):
     # total_reward = jsp.signal.convolve2d(reward, brush, mode='same')
     total_reward = reward
 
-    order = onp.argsort(jnp.abs(total_reward).flatten())
+    order = np.argsort(np.abs(total_reward).flatten())
     id_full_sorted = list(
         zip(
-            *map(lambda x: x.tolist(), jnp.unravel_index(order, reward.shape))
+            *map(lambda x: x.tolist(), np.unravel_index(order, reward.shape))
         )
     )
     # id_sorted = id_full_sorted
@@ -66,32 +64,32 @@ def generator(reward, brush):
 
 # TODO: Make another generator that take also reward and update it
 def _step_generator(
-    # des: Design, brush: jnp.array, id: tuple[int, int], rew: jnp.array
-    des: Design, brush: jnp.array, id: tuple[int, int]
+    # des: Design, brush: np.array, id: tuple[int, int], rew: np.array
+    des: Design, brush: np.array, id: tuple[int, int]
 ) -> Design:
-    # if jnp.any(DesignState.is_solid(des.x[idx])):
+    # if np.any(DesignState.is_solid(des.x[idx])):
     #     # If the pixel is solid, then the touch is solid
     #     des = _update_touch(des, idx, TouchState.SOLID)
 
     # if free touches exist then
-    if jnp.any(des.t_v == TouchState.FREE):
+    if np.any(des.t_v == TouchState.FREE):
         # updated_des = update_free_touches(des, FreeState.VOID)
         # # idxs = choose_valid_touch(des.reward, des.t_v == TouchState.FREE)
-        idxs = array_2id_to_1ids(onp.where(des.t_v == TouchState.FREE))
+        idxs = array_2id_to_1ids(np.where(des.t_v == TouchState.FREE))
         updated_des = add_void_touches(des, idxs, brush)
-    elif jnp.any(des.t_s == TouchState.FREE):
+    elif np.any(des.t_s == TouchState.FREE):
         # updated_des = update_free_touches(des, FreeState.SOLID)
         # # idxs = choose_valid_touch(des.reward, des.t_s == TouchState.FREE)
-        idxs = array_2id_to_1ids(onp.where(des.t_s == TouchState.FREE))
+        idxs = array_2id_to_1ids(np.where(des.t_s == TouchState.FREE))
         updated_des = add_solid_touches(des, idxs, brush)
 
     # else if resolving touches exist then
     #   select a single resolving touch
-    elif jnp.any(des.p_v == PixelState.REQUIRED):
+    elif np.any(des.p_v == PixelState.REQUIRED):
         mask_req_void = (des.p_v == PixelState.REQUIRED)
         id_next = choose_higher_masked_val(des.reward, mask_req_void)
         updated_des = add_void_touches(des, [id_next], brush)
-    elif jnp.any(des.p_s == PixelState.REQUIRED):
+    elif np.any(des.p_s == PixelState.REQUIRED):
         mask_req_solid = (des.p_s == PixelState.REQUIRED)
         id_next = choose_higher_masked_val(des.reward, mask_req_solid)
         updated_des = add_solid_touches(des, [id_next], brush)
@@ -108,7 +106,7 @@ def _step_generator(
 
 # # TODO: Test the solution of Jax documentation
 # # https://jax.readthedocs.io/en/latest/jax-101/04-advanced-autodiff.html
-@generator.defjvp
+# @generator.defjvp
 def conditional_generator_jvp(brush, primals, tangents):
     reward, = primals
     # The gradient of a non-differentiable [is replaced] with that of an estimator
@@ -119,23 +117,23 @@ def conditional_generator_jvp(brush, primals, tangents):
 
 
 # The next touch is those from the reward with the highest value
-@jax.jit
+# @jax.jit
 def choose_higher_masked_val(array, mask):
-    idx_max = jnp.abs((array * mask).flatten()).argmax()
-    return jnp.unravel_index(idx_max, shape=array.shape)
+    idx_max = np.abs((array * mask).flatten()).argmax()
+    return np.unravel_index(idx_max, shape=array.shape)
 
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import brushes
-    onp.random.seed(42)
+    np.random.seed(42)
     brush = brushes.notched_square_brush(13, 1)
 
     L = 100
-    rew = onp.random.rand(L,L)
+    rew = np.random.rand(L,L)
 
     beta = 2
-    post_transform = onp.tanh(beta * convolve2d(rew, brush, mode='same'))
+    post_transform = np.tanh(beta * convolve2d(rew, brush, mode='same'))
 
     fig, ax = plt.subplots(1,3,figsize=(15,5))
     ax[0].imshow(rew.T, origin='lower')
