@@ -66,3 +66,41 @@ def get_convolved_idx(data, idxs0, brush):
 
     # return from_list_2ids_to_2list_id(idxs_conv)
     return idxs_conv
+
+
+def get_double_convolved_idx(data, idxs0, brush):
+
+    x_shape, y_shape = data.shape
+    # Get the range from the brush POV centered on the pixel idxs0
+    # which well be contained in the window
+    brush_x_range = range(
+        max(0, brush.shape[0] // 2 - idxs0[0]),
+        min(brush.shape[0], brush.shape[0] // 2 + (x_shape - idxs0[0]))
+    )
+    brush_y_range = range(
+        max(0, brush.shape[1] // 2 - idxs0[1]),
+        min(brush.shape[1], brush.shape[1] // 2 + (y_shape - idxs0[1]))
+    )
+    # Get the range of the pixel with the brush centered at idxs0
+    # which well be contained in the window
+    x_range = range(
+        max(0, idxs0[0] - brush.shape[0] // 2),
+        min(idxs0[0] + 1 + brush.shape[0] // 2, x_shape)
+    )
+    y_range = range(
+        max(0, idxs0[1] - brush.shape[1] // 2),
+        min(idxs0[1] + 1 + brush.shape[1] // 2, y_shape)
+    )
+
+    # Generate the list of idx
+    # Find the idx from the POV of the brush
+    idx_brush_window = list(product(brush_x_range, brush_y_range))
+    # Only keep the idx where the brush is True
+    mask_brush = (brush[tuple(zip(*idx_brush_window))] == True)
+    # Find the idx from the POV of the data
+    idx_data_window = list(product(list(x_range), list(y_range)))
+    # Use compress to filter the list of idx from the data POV
+    idxs_conv = list(compress(idx_data_window,mask_brush))
+
+    # return from_list_2ids_to_2list_id(idxs_conv)
+    return idxs_conv

@@ -17,6 +17,7 @@ from .touches import add_solid_touches, add_void_touches
 # @partial(jax.custom_jvp, nondiff_argnums=(1,))
 def generator(reward, brush):
     # total_reward = convolve2d(reward, brush, mode='same')
+    brush_convolved = (convolve2d(brush * 1.0, brush) != 0.0)
 
     # Sort by abs value
     # -> If negative: high probability of hole
@@ -56,7 +57,7 @@ def generator(reward, brush):
             id_full_sorted, bool_touch_exist[order]
         )
         feas_design = _step_generator(
-            feas_design, brush, id_sorted[-1]
+            feas_design, brush, brush_convolved, id_sorted[-1]
         )
 
     return feas_design
@@ -65,7 +66,7 @@ def generator(reward, brush):
 # TODO: Make another generator that take also reward and update it
 def _step_generator(
     # des: Design, brush: np.array, id: tuple[int, int], rew: np.array
-    des: Design, brush: np.array, id: tuple[int, int]
+    des: Design, brush: np.array, brush_convolved: np.array, id: tuple[int, int]
 ) -> Design:
     # if np.any(DesignState.is_solid(des.x[idx])):
     #     # If the pixel is solid, then the touch is solid
@@ -76,30 +77,30 @@ def _step_generator(
         # updated_des = update_free_touches(des, FreeState.VOID)
         # # idxs = choose_valid_touch(des.reward, des.t_v == TouchState.FREE)
         idxs = array_2id_to_1ids(np.where(des.t_v == TouchState.FREE))
-        updated_des = add_void_touches(des, idxs, brush)
+        updated_des = add_void_touches(des, idxs, brush, brush_convolved)
     elif np.any(des.t_s == TouchState.FREE):
         # updated_des = update_free_touches(des, FreeState.SOLID)
         # # idxs = choose_valid_touch(des.reward, des.t_s == TouchState.FREE)
         idxs = array_2id_to_1ids(np.where(des.t_s == TouchState.FREE))
-        updated_des = add_solid_touches(des, idxs, brush)
+        updated_des = add_solid_touches(des, idxs, brush, brush_convolved)
 
     # else if resolving touches exist then
     #   select a single resolving touch
     elif np.any(des.p_v == PixelState.REQUIRED):
         mask_req_void = (des.p_v == PixelState.REQUIRED)
         id_next = choose_higher_masked_val(des.reward, mask_req_void)
-        updated_des = add_void_touches(des, [id_next], brush)
+        updated_des = add_void_touches(des, [id_next], brush, brush_convolved)
     elif np.any(des.p_s == PixelState.REQUIRED):
         mask_req_solid = (des.p_s == PixelState.REQUIRED)
         id_next = choose_higher_masked_val(des.reward, mask_req_solid)
-        updated_des = add_solid_touches(des, [id_next], brush)
+        updated_des = add_solid_touches(des, [id_next], brush, brush_convolved)
 
     else:
         # select a single valid touch
         if des.reward[id] > 0:
-            updated_des = add_solid_touches(des, [id], brush)
+            updated_des = add_solid_touches(des, [id], brush, brush_convolved)
         else:
-            updated_des = add_void_touches(des, [id], brush)
+            updated_des = add_void_touches(des, [id], brush, brush_convolved)
 
     return updated_des
 

@@ -7,6 +7,14 @@ from gruyere.states import TouchState, PixelState, DesignState
 
 
 def add_solid_touches(des: Design, idx_touches: list[int, int], brush):
+    idx_t_dilated = list(set().union(
+        *map(
+            lambda idx_var: get_convolved_idx(des.x, idx_var, brush),
+            idx_touches
+        )
+    ))
+    list_idx_t_dilated = from_list_id_couple_to_2tuples_ids(idx_t_double_dilated)
+    
     # Se restreindre aux pixels affectes
     # --> double dilatation de la touch
     # aka dilation de la zone de touch
@@ -14,8 +22,10 @@ def add_solid_touches(des: Design, idx_touches: list[int, int], brush):
         lambda idx_var: get_convolved_idx(des.x, idx_var, brush),
         idx_t_dilated
     ))
-    idx_t_double_dilated = list(set().union(*idx_mapped))
-
+    # idx_t_double_dilated = list(set().union(*idx_mapped))
+    idx_t_double_dilated = from_list_id_couple_to_2tuples_ids(
+        list(set().union(*idx_mapped))
+    )
 
     # Prepare the new design
     new_x = des.x[idx_t_double_dilated]
@@ -26,17 +36,14 @@ def add_solid_touches(des: Design, idx_touches: list[int, int], brush):
     t_void = des.t_v[idx_t_double_dilated]
     p_void = des.p_v[idx_t_double_dilated]
 
-    idx_t_dilated = list(set().union(
-        *map(
-            lambda idx_var: get_convolved_idx(des.x, idx_var, brush),
-            idx_touches
-        )
-    ))
     couples_idx_t_dilated = from_list_id_couple_to_2tuples_ids(idx_t_dilated)
 
     # No need to use the equation (B.5)
     # --> By default, all touches are considered valid
 
+    print(idx_touches, from_list_id_couple_to_2tuples_ids(idx_touches))
+    print(t_solid.shape)
+    
     # Step 0 - Update the new SOLID touch
     t_solid[from_list_id_couple_to_2tuples_ids(idx_touches)] = TouchState.EXISTING
 
