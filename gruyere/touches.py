@@ -10,37 +10,47 @@ def add_solid_touches(des: Design, idx_touches: list[int, int], brush, brush_con
     # Se restreindre aux pixels affectes
     # --> double dilatation de la touch
     # aka dilation de la zone de touch
-    idx_t_dilated = list(set().union(
+
+    # Convention
+    # -> pairs = [[x1, y1], [x2, y2], ...]
+    # -> idxs = ((x1, x2, ...), (y1, y2, ...))
+
+    # After one dilation of touches
+    pairs_t_dilated = list(set().union(
         *map(
             lambda idx_var: get_convolved_idx(des.x, idx_var, brush),
             idx_touches
         )
     ))
-    # arr_idx_t_dilated = from_list_id_couple_to_2tuples_ids(idx_t_dilated)
-    arr_idx_t_dilated = from_list_id_couple_to_2tuples_ids(
-        list(set().union(*idx_t_double_dilated))
-    )
+    idxs_t_dilated = from_list_id_couple_to_2tuples_ids(pairs_t_dilated)
 
-    idx_t_double_dilated = list(map(
-        lambda idx_var: get_double_convolved_idx(des.x, idx_var, brush_convolved),
-        idx_t_dilated
+    # After double dilation of touches
+    pairs_t_double_dilated = list(set().union(
+        *map(
+            lambda idx_var: get_double_convolved_idx(des.x, idx_var, brush_convolved),
+            pairs_t_dilated
+        )
     ))
-    list_idx_t_dilated = from_list_id_couple_to_2tuples_ids(idx_t_double_dilated)
-    # idx_t_double_dilated = list(set().union(*idx_mapped))
-    arr_t_double_dilated = from_list_id_couple_to_2tuples_ids(
-        list(set().union(*idx_t_double_dilated))
-    )
+    idxs_t_double_dilated = from_list_id_couple_to_2tuples_ids(pairs_t_double_dilated)
+
+    import numpy as np
+    data = np.zeros_like(des.x)
+    data[idxs_t_dilated] = 1.0
+
+    class design: pass
+    design.x = data
+    return design
 
     # Prepare the new design
-    new_x = des.x[arr_t_double_dilated]
+    new_x = des.x[idxs_t_double_dilated]
 
-    t_solid = des.t_s[arr_t_double_dilated]
-    p_solid = des.p_s[arr_t_double_dilated]
+    t_solid = des.t_s[idxs_t_double_dilated]
+    p_solid = des.p_s[idxs_t_double_dilated]
 
-    t_void = des.t_v[arr_t_double_dilated]
-    p_void = des.p_v[arr_t_double_dilated]
+    t_void = des.t_v[idxs_t_double_dilated]
+    p_void = des.p_v[idxs_t_double_dilated]
 
-    arr_idx_t_dilated = from_list_id_couple_to_2tuples_ids(idx_t_dilated)
+    arr_idx_t_dilated = from_list_id_couple_to_2tuples_ids(pairs_t_dilated)
 
     # No need to use the equation (B.5)
     # --> By default, all touches are considered valid
@@ -61,7 +71,7 @@ def add_solid_touches(des: Design, idx_touches: list[int, int], brush, brush_con
     # If pixels are already solid, they cannot be void
     # TODO: Check if it is necessary and correct
     # p_void = des.p_v.at[
-    #     from_list_id_couple_to_2tuples_ids(idx_t_dilated)
+    #     from_list_id_couple_to_2tuples_ids(pairs_t_dilated)
     # ].set(PixelState.IMPOSSIBLE)
 
     # Step 3 - Update VOID touches
@@ -69,12 +79,12 @@ def add_solid_touches(des: Design, idx_touches: list[int, int], brush, brush_con
     # t_v_impossible = D(p_s_existing, b)
     idx_mapped = list(map(
         lambda idx_var: get_convolved_idx(des.x, idx_var, brush),
-        idx_t_dilated
+        pairs_t_dilated
     ))
-    # idx_t_double_dilated = list(set().union(*idx_mapped))
-    # # idx_full_array = idx_t_double_dilated
-    # t_void[from_list_id_couple_to_2tuples_ids(idx_t_double_dilated)] = TouchState.INVALID
-    t_void[from_list_id_couple_to_2tuples_ids(idx_t_double_dilated)] = TouchState.INVALID
+    # pairs_t_double_dilated = list(set().union(*idx_mapped))
+    # # idx_full_array = pairs_t_double_dilated
+    # t_void[from_list_id_couple_to_2tuples_ids(pairs_t_double_dilated)] = TouchState.INVALID
+    t_void[from_list_id_couple_to_2tuples_ids(pairs_t_double_dilated)] = TouchState.INVALID
 
     # Step 4 - Find valid SOLID touches
     idx_valid = list(compress(
