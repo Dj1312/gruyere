@@ -119,6 +119,7 @@ def conditional_generator_jvp(brush, primals, tangents):
 
 # The next touch is those from the reward with the highest value
 # @jax.jit
+# TODO: Take only the idx in account
 def choose_higher_masked_val(array, mask):
     idx_max = np.abs((array * mask).flatten()).argmax()
     return np.unravel_index(idx_max, shape=array.shape)
