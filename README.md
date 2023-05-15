@@ -1,0 +1,3 @@
+# 🧀 Gruyere - Work In Progress...
+
+An attempt to reproduce results from the paper [_Inverse design of photonic devices with strict foundry fabrication constraints_](https://arxiv.org/abs/2201.12965).
