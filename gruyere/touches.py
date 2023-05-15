@@ -1,5 +1,7 @@
 from itertools import compress, product
 
+import numpy as np
+
 from gruyere.design import Design
 from gruyere.ops import get_convolved_idx, get_double_convolved_idx
 from gruyere.misc import from_list_id_couple_to_2tuples_ids
@@ -14,6 +16,15 @@ def add_solid_touches(des: Design, idx_touches: list[int, int], brush, brush_con
     # Convention
     # -> pairs = [[x1, y1], [x2, y2], ...]
     # -> idxs = ((x1, x2, ...), (y1, y2, ...))
+    
+    # Pairs of coordinates for the considred window
+    pairs_window = list(set().union(
+        *map(
+            lambda idx_var: get_convolved_idx(des.x, idx_var, np.ones_like(brush_convolved)),
+            idx_touches
+        )
+    ))
+    print(pairs_window)
 
     # After one dilation of touches
     pairs_t_dilated = list(set().union(
@@ -33,7 +44,7 @@ def add_solid_touches(des: Design, idx_touches: list[int, int], brush, brush_con
     ))
     idxs_t_double_dilated = from_list_id_couple_to_2tuples_ids(pairs_t_double_dilated)
 
-    import numpy as np
+    # import numpy as np
     data = np.zeros_like(des.x)
     data[idxs_t_dilated] = 1.0
 
